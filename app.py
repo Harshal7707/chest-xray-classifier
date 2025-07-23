@@ -1,0 +1,57 @@
+import gradio as gr
+import tensorflow as tf
+import numpy as np
+import os
+import google.generativeai as genai
+from dotenv import load_dotenv
+from PIL import Image
+
+# Load API key
+load_dotenv()
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Load the trained model
+model = tf.keras.models.load_model("chest_xray_model.h5")
+
+# Define class labels
+class_labels = ['NORMAL', 'PNEUMONIA']
+
+# Preprocess image to match model input
+def preprocess_image(img):
+    img = img.resize((224, 224))  # ✅ Corrected size
+    img_array = tf.keras.preprocessing.image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array /= 255.0
+    return img_array
+
+# Generate medical-style report using Gemini
+def generate_report(label):
+    prompt = f"""Generate a detailed medical-style diagnostic report for a chest X-ray image predicted to show: {label}.
+Include likely symptoms, treatment suggestions, and cautionary follow-ups in simple language."""
+
+    model = genai.GenerativeModel("gemini-pro")
+    response = model.generate_content(prompt)
+    return response.text
+
+# Model prediction and Gemini report
+def predict_and_generate(image):
+    img = Image.fromarray(image)
+    preprocessed = preprocess_image(img)
+    prediction = model.predict(preprocessed)[0]
+    predicted_label = class_labels[np.argmax(prediction)]
+    report = generate_report(predicted_label)
+    return f"Prediction: {predicted_label}", report
+
+# Gradio interface
+iface = gr.Interface(
+    fn=predict_and_generate,
+    inputs=gr.Image(type="numpy", label="Upload Chest X-ray"),
+    outputs=[
+        gr.Textbox(label="Model Prediction"),
+        gr.Textbox(label="AI-Generated Medical Report")
+    ],
+    title="Chest X-ray Report Generator (Gemini-powered)",
+    description="Upload a chest X-ray image. The model predicts and Gemini generates a report."
+)
+
+iface.launch()

@@ -1,0 +1,14 @@
+# Ignore Python environment folders
+env/
+venv/
+__pycache__/
+
+# Ignore environment variable files
+.env
+
+# Ignore model files if you want (optional)
+chest_xray_model.h5
+
+# Ignore system files
+.DS_Store
+Thumbs.db
