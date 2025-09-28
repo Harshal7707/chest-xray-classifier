@@ -3,13 +3,13 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 
-# Keras Model Trained on colab
+# Keras Model I trained on  Google Colab
 model = tf.keras.models.load_model("chest_xray_model.h5")
 
 # Labels
 class_labels = ['NORMAL', 'PNEUMONIA']
 
-# Preprocessing if to increase the quality of training&testing
+# Preprocessing to increase the speed
 def preprocess_image(img):
     img = img.convert("RGB")
     img = img.resize((224, 224))
@@ -18,7 +18,6 @@ def preprocess_image(img):
     img_array /= 255.0
     return img_array
 
-# This one if the gemini limit reached
 def predict_only(image):
     img = Image.fromarray(image)
     preprocessed = preprocess_image(img)
@@ -34,7 +33,7 @@ def predict_only(image):
 
     return f"Prediction: {predicted_label}"
 
-# Basic Gradio interface
+# UI part
 iface = gr.Interface(
     fn=predict_only,
     inputs=gr.Image(type="numpy", label="Upload Chest X-ray"),
